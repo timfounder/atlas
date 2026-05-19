@@ -98,19 +98,127 @@
     return loadP;
   }
 
+  // ── Admin persistence via GitHub ────────────────────────────────────────
+  // Outside Claude Code's runtime, window.omelette doesn't exist, so the
+  // sidecar can't be written through the host bridge. As a fallback, an
+  // admin can stash a GitHub PAT + repo coordinates in localStorage and
+  // every drop will be committed to the repo via the GitHub Contents API.
+  // Visitors without a token still see the committed sidecar (fetched the
+  // normal way in load()) but can't edit, because the editable flag in
+  // _render() gates the UI on a writable sink being available.
+  //
+  // Set via the browser console:
+  //   atlasAdmin.set('ghp_…', 'owner', 'repo')               // main branch
+  //   atlasAdmin.set('ghp_…', 'owner', 'repo', 'gh-pages')   // custom branch
+  // PAT scope: classic `repo` or fine-grained `Contents: read+write`.
+  const ADMIN_KEY = 'atlas-admin';
+  function readAdmin() {
+    try {
+      const raw = localStorage.getItem(ADMIN_KEY);
+      if (!raw) return null;
+      const o = JSON.parse(raw);
+      if (!o || !o.token || !o.owner || !o.repo) return null;
+      return { token: o.token, owner: o.owner, repo: o.repo, branch: o.branch || 'main' };
+    } catch (e) { return null; }
+  }
+  function hasWritableSink() {
+    return !!(window.omelette && window.omelette.writeFile) || !!readAdmin();
+  }
+  // Cached sha of the sidecar's current blob — GitHub's Contents API
+  // requires it to update an existing file. Reset on 409/422 (someone else
+  // committed) so the next save re-fetches and retries once.
+  let ghSha = null;
+  let ghShaP = null;
+  function ghHeaders(admin) {
+    return {
+      Authorization: 'token ' + admin.token,
+      Accept: 'application/vnd.github+json',
+    };
+  }
+  function ghUrl(admin) {
+    return 'https://api.github.com/repos/' + admin.owner + '/' + admin.repo +
+           '/contents/' + STATE_FILE;
+  }
+  function loadGhSha(admin) {
+    if (ghShaP) return ghShaP;
+    ghShaP = fetch(ghUrl(admin) + '?ref=' + encodeURIComponent(admin.branch),
+                   { headers: ghHeaders(admin) })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (j && j.sha) ghSha = j.sha; })
+      .catch(() => {});
+    return ghShaP;
+  }
+  // The sidecar may carry non-ASCII (none today, but be safe) and data
+  // URLs are ASCII — both round-trip cleanly through this encode.
+  function utf8ToB64(s) {
+    return btoa(unescape(encodeURIComponent(s)));
+  }
+  async function putToGh(admin, body) {
+    const r = await fetch(ghUrl(admin), {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders(admin)),
+      body: JSON.stringify(body),
+    });
+    return r;
+  }
+  async function saveToGitHub() {
+    const admin = readAdmin();
+    if (!admin) return;
+    await loadGhSha(admin);
+    const body = {
+      message: 'image-slot: update photos',
+      content: utf8ToB64(JSON.stringify(slots)),
+      branch: admin.branch,
+    };
+    if (ghSha) body.sha = ghSha;
+    let r = await putToGh(admin, body);
+    if (r.status === 409 || r.status === 422) {
+      ghShaP = null; ghSha = null;
+      await loadGhSha(admin);
+      if (ghSha) body.sha = ghSha; else delete body.sha;
+      r = await putToGh(admin, body);
+    }
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      throw new Error('GitHub save failed: ' + r.status + ' ' + txt);
+    }
+    const j = await r.json();
+    if (j && j.content && j.content.sha) ghSha = j.content.sha;
+  }
+
+  // Expose a tiny admin helper so the token can be set from DevTools without
+  // hand-editing localStorage. Reload so _render() re-runs with the new
+  // editable state.
+  window.atlasAdmin = {
+    set(token, owner, repo, branch) {
+      if (!token || !owner || !repo) throw new Error('atlasAdmin.set(token, owner, repo[, branch])');
+      localStorage.setItem(ADMIN_KEY, JSON.stringify({
+        token, owner, repo, branch: branch || 'main',
+      }));
+      location.reload();
+    },
+    clear() { localStorage.removeItem(ADMIN_KEY); location.reload(); },
+    status() { return readAdmin() ? { ...readAdmin(), token: '***' } : null; },
+  };
+
   // Serialize writes so two near-simultaneous drops on different slots
   // can't reorder at the backend and leave the sidecar with only the
   // first. A save requested mid-flight just marks dirty and re-fires on
-  // completion with the then-current slots.
+  // completion with the then-current slots — so a burst of drops coalesces
+  // into at most two backend writes regardless of how fast they fire.
   let saving = false;
   let saveDirty = false;
   function save() {
     if (saving) { saveDirty = true; return; }
     const w = window.omelette && window.omelette.writeFile;
-    if (!w) return;
+    const admin = readAdmin();
+    let task;
+    if (w) task = Promise.resolve(w(STATE_FILE, JSON.stringify(slots)));
+    else if (admin) task = saveToGitHub();
+    else return;
     saving = true;
-    Promise.resolve(w(STATE_FILE, JSON.stringify(slots)))
-      .catch(() => {})
+    task
+      .catch((e) => { console.warn('<image-slot> save failed:', e); })
       .then(() => { saving = false; if (saveDirty) { saveDirty = false; save(); } });
   }
 
@@ -591,7 +699,7 @@
       this._ring.style.display = mask ? 'none' : '';
 
       // Controls and reframe entry gate on this so share links stay read-only.
-      const editable = !!(window.omelette && window.omelette.writeFile);
+      const editable = hasWritableSink();
       this.toggleAttribute('data-editable', editable);
       this._sub.style.display = editable ? '' : 'none';
 
