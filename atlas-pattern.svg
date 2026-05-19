@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="480" viewBox="0 0 240 480" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="ikat" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.018" numOctaves="3" seed="7"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="11"></feDisplacementMap>
+    </filter>
+    <pattern id="dots" x="0" y="0" width="10" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="7" r="1.1" fill="#1a1310" opacity="0.55"></circle>
+    </pattern>
+  </defs>
+
+  
+  <rect width="240" height="480" fill="#F4ECE0"></rect>
+
+  <g filter="url(#ikat)">
+    
+    <rect x="0" y="-10" width="42" height="500" fill="#9A1B2F"></rect>
+    <rect x="42" y="-10" width="8" height="500" fill="#F4ECE0"></rect>
+    <rect x="50" y="-10" width="38" height="500" fill="#D4A24C"></rect>
+    <rect x="88" y="-10" width="6" height="500" fill="#F4ECE0"></rect>
+    <rect x="94" y="-10" width="34" height="500" fill="#2C5F3F"></rect>
+    <rect x="128" y="-10" width="6" height="500" fill="#F4ECE0"></rect>
+    <rect x="134" y="-10" width="40" height="500" fill="#1F3357"></rect>
+    <rect x="174" y="-10" width="8" height="500" fill="#F4ECE0"></rect>
+    <rect x="182" y="-10" width="32" height="500" fill="#7A2A55"></rect>
+    <rect x="214" y="-10" width="6" height="500" fill="#F4ECE0"></rect>
+    <rect x="220" y="-10" width="24" height="500" fill="#D4A24C"></rect>
+
+    
+    <g fill="#F4ECE0">
+      <path d="M21 60 Q30 40 21 20 Q12 40 21 60 Z"></path>
+      <path d="M21 180 Q30 160 21 140 Q12 160 21 180 Z"></path>
+      <path d="M21 300 Q30 280 21 260 Q12 280 21 300 Z"></path>
+      <path d="M21 420 Q30 400 21 380 Q12 400 21 420 Z"></path>
+      <path d="M69 110 Q78 90 69 70 Q60 90 69 110 Z"></path>
+      <path d="M69 230 Q78 210 69 190 Q60 210 69 230 Z"></path>
+      <path d="M69 350 Q78 330 69 310 Q60 330 69 350 Z"></path>
+      <path d="M69 470 Q78 450 69 430 Q60 450 69 470 Z"></path>
+      <path d="M111 60 Q120 40 111 20 Q102 40 111 60 Z"></path>
+      <path d="M111 180 Q120 160 111 140 Q102 160 111 180 Z"></path>
+      <path d="M111 300 Q120 280 111 260 Q102 280 111 300 Z"></path>
+      <path d="M111 420 Q120 400 111 380 Q102 400 111 420 Z"></path>
+      <path d="M154 110 Q163 90 154 70 Q145 90 154 110 Z"></path>
+      <path d="M154 230 Q163 210 154 190 Q145 210 154 230 Z"></path>
+      <path d="M154 350 Q163 330 154 310 Q145 330 154 350 Z"></path>
+      <path d="M154 470 Q163 450 154 430 Q145 450 154 470 Z"></path>
+      <path d="M198 60 Q207 40 198 20 Q189 40 198 60 Z"></path>
+      <path d="M198 180 Q207 160 198 140 Q189 160 198 180 Z"></path>
+      <path d="M198 300 Q207 280 198 260 Q189 280 198 300 Z"></path>
+      <path d="M198 420 Q207 400 198 380 Q189 400 198 420 Z"></path>
+    </g>
+
+    
+    <g fill="#1a1310" opacity="0.6">
+      <circle cx="21" cy="40" r="1.6"></circle>
+      <circle cx="21" cy="160" r="1.6"></circle>
+      <circle cx="21" cy="280" r="1.6"></circle>
+      <circle cx="21" cy="400" r="1.6"></circle>
+      <circle cx="69" cy="90" r="1.6"></circle>
+      <circle cx="69" cy="210" r="1.6"></circle>
+      <circle cx="69" cy="330" r="1.6"></circle>
+      <circle cx="69" cy="450" r="1.6"></circle>
+      <circle cx="111" cy="40" r="1.6"></circle>
+      <circle cx="111" cy="160" r="1.6"></circle>
+      <circle cx="111" cy="280" r="1.6"></circle>
+      <circle cx="111" cy="400" r="1.6"></circle>
+      <circle cx="154" cy="90" r="1.6"></circle>
+      <circle cx="154" cy="210" r="1.6"></circle>
+      <circle cx="154" cy="330" r="1.6"></circle>
+      <circle cx="154" cy="450" r="1.6"></circle>
+      <circle cx="198" cy="40" r="1.6"></circle>
+      <circle cx="198" cy="160" r="1.6"></circle>
+      <circle cx="198" cy="280" r="1.6"></circle>
+      <circle cx="198" cy="400" r="1.6"></circle>
+    </g>
+  </g>
+</svg>
